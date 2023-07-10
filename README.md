@@ -2,6 +2,8 @@
 Benchmark metrics for crystal structure prediction
 
 
+# How to install the CSP metric package
+
 
 # How to use the CSPMetrics
 
