@@ -15,15 +15,19 @@ Follow the requirement.txt file to install the corresponding packages.
 Benchmark metrics for crystal structure prediction
 
 
-### How to use the CSPMetrics
+### How to use the CSPMetrics 
 
 
 ### Calculate the distance matrics between two structures
 
-
-
-
+An example is to compute distance metrics between the ground truth formula and the predicted formula.
+```
+python3 distance_single.py --cif {../data/SrTiO3_gt} --predicted {../data/SrTiO3_pred}
+```
 
 ## Calculate the distance metrics between a ground truth structure and a folder of predicted structures
 
-
+An example is to compute distance metrics between the ground truth formula and the predicted formula.
+```
+python3 calculate_multiple_cif.py --formula {Ca4S4}
+```
