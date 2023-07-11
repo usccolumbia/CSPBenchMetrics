@@ -52,16 +52,16 @@ If you want to test your own cases, you can upload the structure files and chang
 
 Here the example is to compute the distance metrics between the ground truth structure of Ca4S4 and the predicted structures of Ca4S4. 
 
-First put the ground truth structure Ca4S4.cif into the data/ground_truth_structures folder with the file format as Ca4S4.cif
+First put the ground truth structure Ca4S4.cif into the data/ground_truth_structures folder with the file format as Li3Ti3Se6O3.cif
 
-Next, put all the predicted structures into the data/predicted_structures/Ca4S4_0.cif, Ca4S4_1.cif, ...
+Next, put all the predicted structures into the data/predicted_structures/Li3Ti3Se6O3_0.cif, Li3Ti3Se6O3_1.cif, ...
 
 Now, go to the CSPBenchMetrics/code/ folder and then run the command below. 
 
 ```
 cd CSPBenchMetrics/code
-python3 calculate_multiple_cif.py --formula Ca4S4
+python3 calculate_multiple_cif.py --formula Li3Ti3Se6O3
 ```
-Then you can check the result in "~/CSPBenchMetrics/results/distance_table_formula_name.csv". The formula_name here is Ca4S4.
+Then you can check the result in "~/CSPBenchMetrics/results/distance_table_formula_name.csv". The formula_name here is Li3Ti3Se6O3.
 
 If you want to test your own cases, you can upload the structure files and change the corresponding name.
