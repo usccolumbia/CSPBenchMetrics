@@ -7,7 +7,7 @@ This repository contains the code and datasets for the paper:
 
 by <a href="http://mleg.cse.sc.edu" target="_blank">Machine Learning and Evolution Laboratory</a>, University of South Carolina.
 
-### Python Dependencies
+# Python Dependencies
 Follow the requirement.txt file to install the corresponding packages.
 
 
