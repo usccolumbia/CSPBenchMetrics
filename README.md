@@ -1,4 +1,4 @@
-# CSPMetrics: Crystal Structure Prediction Performance Metrics
+## CSPMetrics: Crystal Structure Prediction Performance Metrics
 
 Developed by Lai Wei and Dr. Jianjun Hu at <a href="http://mleg.cse.sc.edu" target="_blank">Machine Learning and Evolution Laboratory</a>, University of South Carolina.
 
