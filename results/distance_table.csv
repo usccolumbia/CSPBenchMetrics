@@ -1,0 +1,2 @@
+structure,energy_distance,wyckoff_rmse,wyckoff_mae,rms_anonymous,rms_dist,sinkhorn_dist,chamfer_dist,hausdorff_dist,superpose_rmsd,edit_graph_distance,fingerPrint,XRD_dist,OFM_dist
+SrTiO3_pred.cif,39.9298,0.3702,0.2654,,None,13.2096,4.3629,3.7809,1.1436,6.0000,2.5924,2.0702,0.4755
