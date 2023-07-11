@@ -1,6 +1,9 @@
 # CSPMetrics: Crystal Structure Prediction Performance Metrics
 
-This repository contains the code and datasets for the paper [PDF]():
+Developed by Lai Wei and Dr. Jianjun Hu at <a href="http://mleg.cse.sc.edu" target="_blank">Machine Learning and Evolution Laboratory</a>, University of South Carolina.
+
+
+This repository contains the code and test datasets for our paper [PDF]():
 
 ```
 @article{PhysRevLett.120.145301,
@@ -20,7 +23,6 @@ This repository contains the code and datasets for the paper [PDF]():
 ```
 
 
-by <a href="http://mleg.cse.sc.edu" target="_blank">Machine Learning and Evolution Laboratory</a>, University of South Carolina.
 
 ## How to install the CSPMetrics package
 
