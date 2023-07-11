@@ -35,10 +35,11 @@ If you want to test your own cases, you can upload the structure files and chang
 
 Here the example is to compute the distance metrics between the ground truth structure of Ca4S4 and the predicted structures of Ca4S4. 
 
-First put the ground truth structure Ca4S4.ci
+First put the ground truth structure Ca4S4.cif into the data/ground_truth_structures folder with the file format as Ca4S4.cif
 
+Next, put all the predicted structures into the data/predicted_structures/Ca4S4_0.cif, Ca4S4_1.cif, ...
 
-Go to the CSPBenchMetrics/code/ folder and then run the command below. 
+Now, go to the CSPBenchMetrics/code/ folder and then run the command below. 
 
 ```
 cd CSPBenchMetrics/code
