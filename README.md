@@ -1,4 +1,4 @@
-# Crystal Structure Prediction Performance Metrics
+# CSPMetrics: Crystal Structure Prediction Performance Metrics
 
 This repository contains the code and datasets for the paper:
 **
@@ -7,7 +7,7 @@ This repository contains the code and datasets for the paper:
 
 by <a href="http://mleg.cse.sc.edu" target="_blank">Machine Learning and Evolution Laboratory</a>, University of South Carolina.
 
-## How to install the CSP metric package
+## How to install the CSPMetrics package
 
 Follow the instructions in the requirement.txt file to install the corresponding packages.
 
