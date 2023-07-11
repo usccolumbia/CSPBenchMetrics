@@ -11,6 +11,8 @@ by <a href="http://mleg.cse.sc.edu" target="_blank">Machine Learning and Evoluti
 
 Follow the requirement.txt file to install the corresponding packages.
 
+Please notice that you need to install a version of pytorch that corresponds to cuda.
+
 ## CSPBenchMetrics
 This is a new benchmark platform by using several common distance metrics, including m3gnet energy distance, minimal Wyckoff RMSE distance, minimal Wyckoff MAE distance, RMS distance, RMS anonymous distance, the Sinkhorn distance, the Chamfer distance, the Hausdorff distance, superpose RMSD distance, edit graph distance, XRD spectrum distance and fingerprint distance to standardize the comparison of material structure prediction models.  
 
