@@ -20,7 +20,8 @@ Benchmark metrics for crystal structure prediction
 
 ### Calculate the distance matrics between two structures
 
-An example is to compute distance metrics between the ground truth formula and the predicted formula.
+Go to the CSPBenchMetrics/code/ folder and then copy the command below.
+An example is to compute distance metrics between the ground truth formula and the predicted formula. 
 ```
 python3 distance_single.py --cif ../data/SrTiO3_gt.cif --predicted ../data/SrTiO3_pred.cif
 ```
