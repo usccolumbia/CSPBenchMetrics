@@ -24,7 +24,7 @@ if os.path.exists(f"../results/distance_table_{args.formula}.csv"):
     os.remove(f"../results/distance_table_{args.formula}.csv")
 
 groundtruth_cif = f'../data/ground_truth_structures/{args.formula}.cif'
-predicted_cif = f'../data/predicted_structes/{args.formula}_*.cif'
+predicted_cif = f'../data/predicted_structures/{args.formula}_*.cif'
 
 files = glob.glob(predicted_cif)
 
