@@ -33,9 +33,13 @@ If you want to test your own cases, you can upload the structure files and chang
 
 ### Calculate the distance metrics between a ground truth structure and a folder of predicted structures
 
+Here the example is to compute the distance metrics between the ground truth structure of Ca4S4 and the predicted structures of Ca4S4. 
+
+First put the ground truth structure Ca4S4.ci
+
+
 Go to the CSPBenchMetrics/code/ folder and then run the command below. 
 
-Here the example is to compute the distance metrics between the ground truth structure of Ca4S4 and the predicted structures of Ca4S4. 
 ```
 cd CSPBenchMetrics/code
 python3 calculate_multiple_cif.py --formula Ca4S4
