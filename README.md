@@ -1,3 +1,8 @@
+This repository contains the code and datasets for the paper:
+**
+**link
+by <a href="http://mleg.cse.sc.edu" target="_blank">Machine Learning and Evolution Laboratory</a>, University of South Carolina.
+
 # CSPBenchMetrics
 Benchmark metrics for crystal structure prediction
 
