@@ -1,8 +1,23 @@
 # CSPMetrics: Crystal Structure Prediction Performance Metrics
 
-This repository contains the code and datasets for the paper:
-**
-**link
+This repository contains the code and datasets for the paper [PDF]():
+
+```
+@article{PhysRevLett.120.145301,
+  title = {Towards Quantitative Evaluation of Crystal Structure Prediction Performance},
+  author = {Lai Wei, Qin Li, Sadman Omee, and Jianjun Hu},
+  journal = {Arxiv},
+  volume = {120},
+  issue = {14},
+  pages = {145301},
+  numpages = {6},
+  year = {2023},
+  month = {Apr},
+  publisher = {Arxiv},
+  doi = {10.1103/PhysRevLett.120.145301},
+  url = {https://link.aps.org/doi/10.1103/PhysRevLett.120.145301}
+}
+```
 
 
 by <a href="http://mleg.cse.sc.edu" target="_blank">Machine Learning and Evolution Laboratory</a>, University of South Carolina.
