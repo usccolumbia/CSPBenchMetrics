@@ -1,0 +1,14 @@
+conda create -n metrics python=3.9 pip 
+conda  activate metrics
+pip install point_cloud_utils
+pip install superpose3d
+git clone https://github.com/CheshireCat12/graph-matching-core.git
+cd graph-matching-core
+pip install -e .
+pip install matminer==0.8.0
+pip install pymatgen==2020.10.20
+pip install scikit-learn m3gnet
+conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=11.3 -c pytorch
+conda install pytorch-scatter -c pyg
+conda install pytorch-sparse -c pyg
+conda install pyg -c pyg
