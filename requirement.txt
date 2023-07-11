@@ -12,3 +12,4 @@ conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit
 conda install pytorch-scatter -c pyg
 conda install pytorch-sparse -c pyg
 conda install pyg -c pyg
+pip3 install numpy==1.23
