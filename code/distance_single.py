@@ -142,7 +142,6 @@ def read_cif_to_graph(struct):
     n = len(struct.sites)
     graph_source = Graph('gr_source', 'gr_source.gxl', n)
     for i, s in enumerate(struct.sites):
-        #print(s.species_string)
         e=stripSymbol(s.species_string)
         E = Element(e)
         graph_source.add_node(Node(i, LabelNodeVector(np.array([float(E.Z)]))))
@@ -186,8 +185,6 @@ def CrystalFingerDistance(s1,s2):
     return dist
 
 fingerPrint_dist = (CrystalFingerDistance(s1,s2))
-print("fingerPrint_dist:", fingerPrint_dist)
-
 
 #superpose point cloud distances with alignment by rotation and translation.
 # https://github.com/jewettaij/superpose3d_cpp
@@ -530,7 +527,7 @@ dct = {k:[v] for k,v in result_dict.items()}  # WORKAROUND
 df = pd.DataFrame(dct)
 
 df.drop_duplicates(inplace=True)
-if not os.path.exists('distance_table.csv'):
-    df.to_csv (f"distance_table.csv", index = False, header=True, float_format='%.4f')
+if not os.path.exists('table/distance_table.csv'):
+    df.to_csv (f"table/distance_table.csv", index = False, header=True, float_format='%.4f')
 else:
-    df.to_csv (f"distance_table.csv", mode='a', index = False, header=False,float_format='%.4f')
+    df.to_csv (f"table/distance_table.csv", mode='a', index = False, header=False,float_format='%.4f')
