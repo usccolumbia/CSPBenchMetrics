@@ -9,7 +9,7 @@ by <a href="http://mleg.cse.sc.edu" target="_blank">Machine Learning and Evoluti
 
 ## How to install the CSP metric package
 
-Follow the requirement.txt file to install the corresponding packages.
+Follow the instructions in the requirement.txt file to install the corresponding packages.
 
 Please notice that you need to install a version of pytorch that corresponds to cuda.
 
