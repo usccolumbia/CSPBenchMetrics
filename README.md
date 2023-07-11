@@ -26,6 +26,8 @@ python3 distance_single.py --cif ../data/SrTiO3_gt.cif --predicted ../data/SrTiO
 ```
 Then you can check the result in "~/CSPBenchMetrics/results/distance_table.csv".
 
+If you want to test your cases, you can upload the structure files and change the corresponding name.
+
 ### Calculate the distance metrics between a ground truth structure and a folder of predicted structures
 
 Go to the CSPBenchMetrics/code/ folder and then copy the command below. 
@@ -35,3 +37,5 @@ An example is to compute distance metrics between the ground truth formula and t
 python3 calculate_multiple_cif.py --formula Ca4S4
 ```
 Then you can check the result in "~/CSPBenchMetrics/results/distance_table_formula_name.csv". The formula_name here is Ca4S4.
+
+If you want to test your cases, you can upload the structure files and change the corresponding name.
