@@ -67,7 +67,7 @@ parser.add_argument(
 
 parser.add_argument(
     "--predicted",
-    default="../data/Sr1Ti1O3_pred.cif",
+    default="../data/SrTiO3_pred.cif",
     metavar="PATH",
     help="Path to predicted cif file",
 )
@@ -192,8 +192,6 @@ def CrystalFingerDistance(s1,s2):
     return dist
 
 fingerPrint_dist = (CrystalFingerDistance(s1,s2))
-print("fingerPrint_dist:", fingerPrint_dist)
-
 
 #superpose point cloud distances with alignment by rotation and translation.
 # https://github.com/jewettaij/superpose3d_cpp
@@ -404,7 +402,6 @@ def wyckoff_distance(targetcif,predictedcif):
         coprf1 = []
         for i in copr:
             coprf1.append(float(i))
-        # pwerr=coordination(predictedcif)
         coprf1 = np.array(coprf1).reshape(int(len(coprf1) / 3), 3)
 
 
@@ -541,7 +538,9 @@ dct = {k:[v] for k,v in result_dict.items()}  # WORKAROUND
 df = pd.DataFrame(dct)
 df.drop_duplicates(inplace=True)
 
-if not os.path.exists(f"distance_table_{args.formula}.csv"):
-    df.to_csv (f"distance_table_{args.formula}.csv", index = False, header=True, float_format='%.4f')
+if not os.path.exists("../results"):
+    os.mkdir("../results")
+if not os.path.exists(f"../results/distance_table_{args.formula}.csv"):
+    df.to_csv (f"../results/distance_table_{args.formula}.csv", index = False, header=True, float_format='%.4f')
 else:
-    df.to_csv (f"distance_table_{args.formula}.csv", mode='a', index = False, header=False,float_format='%.4f')
+    df.to_csv (f"../results/distance_table_{args.formula}.csv", mode='a', index = False, header=False,float_format='%.4f')

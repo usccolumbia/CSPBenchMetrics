@@ -527,7 +527,10 @@ dct = {k:[v] for k,v in result_dict.items()}  # WORKAROUND
 df = pd.DataFrame(dct)
 
 df.drop_duplicates(inplace=True)
-if not os.path.exists('table/distance_table.csv'):
-    df.to_csv (f"table/distance_table.csv", index = False, header=True, float_format='%.4f')
+
+if not os.path.exists("../results"):
+    os.mkdir("../results")
+if not os.path.exists('../results/distance_table.csv'):
+    df.to_csv (f"../results/distance_table.csv", index = False, header=True, float_format='%.4f')
 else:
-    df.to_csv (f"table/distance_table.csv", mode='a', index = False, header=False,float_format='%.4f')
+    df.to_csv (f"../results/distance_table.csv", mode='a', index = False, header=False,float_format='%.4f')
