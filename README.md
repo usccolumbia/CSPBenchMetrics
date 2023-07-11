@@ -1,4 +1,4 @@
-# Crystal Structure Prediction Bench Metrics
+# Crystal Structure Prediction Performance Metrics
 This repository contains the code and datasets for the paper:
 **
 **link
