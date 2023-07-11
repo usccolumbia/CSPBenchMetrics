@@ -7,21 +7,18 @@ This repository contains the code and datasets for the paper:
 
 by <a href="http://mleg.cse.sc.edu" target="_blank">Machine Learning and Evolution Laboratory</a>, University of South Carolina.
 
-# Python Dependencies
+### How to install the CSP metric package
 Follow the requirement.txt file to install the corresponding packages.
 
 
-# CSPBenchMetrics
+### CSPBenchMetrics
 Benchmark metrics for crystal structure prediction
 
 
-# How to install the CSP metric package
+### How to use the CSPMetrics
 
 
-# How to use the CSPMetrics
-
-
-## Calculate the distance matrics between two structures
+### Calculate the distance matrics between two structures
 
 
 
