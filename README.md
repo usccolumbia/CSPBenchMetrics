@@ -3,22 +3,15 @@
 Developed by Lai Wei and Dr. Jianjun Hu at <a href="http://mleg.cse.sc.edu" target="_blank">Machine Learning and Evolution Laboratory</a>, University of South Carolina.
 
 
-This repository contains the code and test datasets for our paper [PDF]():
+This repository contains the code and test datasets for our paper [PDF](https://arxiv.org/pdf/2307.05886):
 
 ```
-@article{PhysRevLett.120.145301,
-  title = {Towards Quantitative Evaluation of Crystal Structure Prediction Performance},
-  author = {Lai Wei, Qin Li, Sadman Omee, and Jianjun Hu},
-  journal = {Arxiv},
-  volume = {120},
-  issue = {14},
-  pages = {145301},
-  numpages = {6},
-  year = {2023},
-  month = {Apr},
-  publisher = {Arxiv},
-  doi = {10.1103/PhysRevLett.120.145301},
-  url = {https://link.aps.org/doi/10.1103/PhysRevLett.120.145301}
+@article{wei2023towards,
+  title={Towards Quantitative Evaluation of Crystal Structure Prediction Performance},
+  author={Wei, Lai and Li, Qin and Omee, Sadman Sadeed and Hu, Jianjun},
+  journal={arXiv preprint arXiv:2307.05886},
+  url = {https://arxiv.org/abs/2307.05886},
+  year={2023}
 }
 ```
 
