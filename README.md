@@ -11,9 +11,9 @@ This repository contains the code and test datasets for our paper [PDF](https://
 @article{wei2023towards,
   title={Towards Quantitative Evaluation of Crystal Structure Prediction Performance},
   author={Wei, Lai and Li, Qin and Omee, Sadman Sadeed and Hu, Jianjun},
-  journal={arXiv preprint arXiv:2307.05886},
+  journal={Computational Materials Science},
   url = {https://arxiv.org/abs/2307.05886},
-  year={2023}
+  year={2024}
 }
 ```
  
