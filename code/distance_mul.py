@@ -48,6 +48,7 @@ import itertools
 from matminer.featurizers.structure.matrix import OrbitalFieldMatrix
 import pymatgen.analysis.diffraction.xrd as xrd
 from scipy.stats import gaussian_kde
+import open3d as o3d
 m3gnet_e_form = M3GNet.load()
 
 parser = argparse.ArgumentParser(
@@ -77,6 +78,7 @@ parser.add_argument(
     default="Ca4S4",
     help="Formula name",
 )
+
 
 args = parser.parse_args(sys.argv[1:])
 
@@ -191,65 +193,149 @@ def CrystalFingerDistance(s1,s2):
     dist = np.linalg.norm(f1 - f2)
     return dist
 
-fingerPrint_dist = (CrystalFingerDistance(s1,s2))
+try:
+    fingerPrint_dist = (CrystalFingerDistance(s1,s2))
+except:
+    fingerPrint_dist = 9999  
+
+def calculate_rmsd(source, target,matching):
+    """
+    Calculate the Root Mean Square Distance (RMSD) between two aligned point clouds.
+    Args:
+        source: Source point cloud.
+        target: Target point cloud.
+
+    Returns:
+        rmsd: Root Mean Square Distance between the two point clouds.
+    """
+    # Ensure both point clouds have the same number of points
+    assert len(source.points) == len(target.points)
+    matching = np.array(matching)
+    for i in matching[:,0]:
+        points_a=[source.points[i] for i in matching[:,0]]
+        points_b=[target.points[i] for i in matching[:,1]]
+
+    if matching.shape[0] < len(source.points):
+        not_matched = set(range(len(source.points)))-set(matching[:,0])
+        for i in not_matched:
+            points_a.append(source.points[i])
+
+        not_matched = set(range(len(target.points)))-set(matching[:,1])
+        for i in not_matched:
+            points_b.append(target.points[i])
+
+    source.points=o3d.utility.Vector3dVector(points_a)
+    target.points=o3d.utility.Vector3dVector(points_b)
+
+    # Calculate squared Euclidean distances between corresponding points
+    squared_distances = np.sum(np.square(np.asarray(source.points) - np.asarray(target.points)), axis=1)
+
+    # Calculate RMSD
+    rmsd = np.sqrt(np.mean(squared_distances))
+    return rmsd
+
+# Generate source and target point clouds
+source = o3d.geometry.PointCloud()
+target = o3d.geometry.PointCloud()
+
+# s1 = getSymmetrized(s1)
+# s2 = getSymmetrized(s2)
+gt = []
+pred = []
+for x in s1.sites:
+    gt.append(x.coords)
+for y in s2.sites:
+    pred.append(y.coords)
+a = np.array(gt)
+b = np.array(pred)
+
+# Generate source point cloud
+source.points = o3d.utility.Vector3dVector(a)  
+
+# Generate target point cloud
+target.points = o3d.utility.Vector3dVector(b)  
+
+# Apply ICP registration
+threshold = 5
+trans_init = np.identity(4)  # Initial transformation matrix
+reg_p2p = o3d.pipelines.registration.registration_icp(
+    source, target, threshold, trans_init,
+    o3d.pipelines.registration.TransformationEstimationPointToPoint(),
+    o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=1000))
+
+# Transform source to target
+source.transform(reg_p2p.transformation)
+
+# Calculate RMSD
+rmsd=reg_p2p.inlier_rmse
+matching = np.asarray(reg_p2p.correspondence_set)
+if reg_p2p.fitness < 1:
+    try:
+            rmsd = calculate_rmsd(source, target,matching)
+    except:
+            rmsd = 9999    
+
 
 #superpose point cloud distances with alignment by rotation and translation.
 # https://github.com/jewettaij/superpose3d_cpp
-def superpose3d_rmsd(s1, s2): # s1, and s2 are to pymatgen structures.
-    gt = []
-    pred = []
-    for x in s1.sites:
-        gt.append(x.coords)
-    for y in s2.sites:
-        pred.append(y.coords)
+# def superpose3d_rmsd(s1, s2): # s1, and s2 are to pymatgen structures.
 
-    a = np.array(gt)
-    b = np.array(pred)
-    X = a
-    x = b
+'''
+We dont't use this metrics now. This function does not attempt to determine 
+which pairs of points from either cloud correspond. Instead, it infers them from 
+the order of the arrays. 
+(It assumes that the i'th point from X corresponds to the i'th point from x.)
+'''
 
-    result = Superpose3D(X,x, None, False, True)
-    #print('weights: '+str([1.0,1.0,1.0,1.0]))
-    #print(' (quaternion = '+str(result[1])+')\n')
+#     gt = []
+#     pred = []
+#     for x in s1.sites:
+#         gt.append(x.coords)
+#     for y in s2.sites:
+#         pred.append(y.coords)
 
-    Xshifted = [ [X[i][0],X[i][1]+100, X[i][2]] for i in range(0,len(X))]
-    xscaled  = [ [2*x[i][0],2*x[i][1],    2*x[i][2]] for i in range(0,len(x))]
-    xscshift = [ [2*x[i][0],2*x[i][1]+200,2*x[i][2]] for i in range(0,len(x))]
+#     a = np.array(gt)
+#     b = np.array(pred)
+#     X = a
+#     x = b
 
-    # Now try again using the translated, rescaled coordinates:
+#     result = Superpose3D(X,x, None, False, True)
 
-    # now test weights, rescale, and quaternions
-    w = []
-    w_rand = random.randint(1,3)
-    for i in range(0, len(x)):
-        w.append(w_rand)
-    result = Superpose3D(X, xscshift, w, True)
-    # Does the RMSD returned in result[0] match the RMSD calculated manually?
-    R = np.array(result[1])              # rotation matrix
-    T = np.array(result[2]).transpose()  # translation vector (3x1 matrix)
-    c = result[3]                        # scalar
-    if len(X) > 0:
-        _x = np.array(xscshift).transpose()
-        # _xprime = c*R*_x + T   <-- syntax is depreciated
-        _xprime = c*np.matmul(R,_x) + np.outer(T, np.array([1]*len(X)))
-        xprime = np.array(_xprime.transpose()) # convert to length 3 numpy array
-    else:
-        xprime = np.array([])
+#     Xshifted = [ [X[i][0],X[i][1]+100, X[i][2]] for i in range(0,len(X))]
+#     xscaled  = [ [2*x[i][0],2*x[i][1],    2*x[i][2]] for i in range(0,len(x))]
+#     xscshift = [ [2*x[i][0],2*x[i][1]+200,2*x[i][2]] for i in range(0,len(x))]
 
-    RMSD = 0.0
-    sum_w = 0.0
-    for i in range(0, len(X)):
-        RMSD += w[i]*((X[i][0] - xprime[i][0])**2 +
-                      (X[i][1] - xprime[i][1])**2 +
-                      (X[i][2] - xprime[i][2])**2)
-        sum_w += w[i]
+#     # Now try again using the translated, rescaled coordinates:
+#     # now test weights, rescale, and quaternions
+#     w = []
+#     w_rand = random.randint(1,3)
+#     for i in range(0, len(x)):
+#         w.append(w_rand)
+#     result = Superpose3D(X, xscshift, w, True)
+#     # Does the RMSD returned in result[0] match the RMSD calculated manually?
+#     R = np.array(result[1])              # rotation matrix
+#     T = np.array(result[2]).transpose()  # translation vector (3x1 matrix)
+#     c = result[3]                        # scalar
+#     if len(X) > 0:
+#         _x = np.array(xscshift).transpose()
+#         # _xprime = c*R*_x + T   <-- syntax is depreciated
+#         _xprime = c*np.matmul(R,_x) + np.outer(T, np.array([1]*len(X)))
+#         xprime = np.array(_xprime.transpose()) # convert to length 3 numpy array
+#     else:
+#         xprime = np.array([])
+#     RMSD = 0.0
+#     sum_w = 0.0
+#     for i in range(0, len(X)):
+#         RMSD += w[i]*((X[i][0] - xprime[i][0])**2 +
+#                       (X[i][1] - xprime[i][1])**2 +
+#                       (X[i][2] - xprime[i][2])**2)
+#         sum_w += w[i]
 
-    if len(X) > 0:
-        RMSD = sqrt(RMSD / sum_w)
+#     if len(X) > 0:
+#         RMSD = sqrt(RMSD / sum_w)
 
-    # assert(abs(RMSD - result[0]) < 1.0e-6)
-    return RMSD
-
+#     # assert(abs(RMSD - result[0]) < 1.0e-6)
+#     return RMSD
 
 
 #energy distance
@@ -523,7 +609,8 @@ def calc(gt_file, pred_file):
 XRD_dist, OFM_dist = calc(args.cif, args.predicted)
 energy_dis = en_dist(s1, s2)
 
-superpose_rmsd = superpose3d_rmsd(s1, s2)
+#superpose_rmsd = superpose3d_rmsd(s1, s2)
+superpose_rmsd = rmsd #replace superpose3d_rmsd here
 
 a, b=  rms,rms_anonymous
 x, y, z= point_cloud_distance(s1, s2)
