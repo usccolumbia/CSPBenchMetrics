@@ -8,12 +8,14 @@ University of South Carolina.
 This repository contains the code and test datasets for our paper [PDF](https://arxiv.org/pdf/2307.05886):
 
 ```
-@article{wei2023towards,
-  title={Towards Quantitative Evaluation of Crystal Structure Prediction Performance},
+@article{wei2024towards,
+  title={Towards quantitative evaluation of crystal structure prediction performance},
   author={Wei, Lai and Li, Qin and Omee, Sadman Sadeed and Hu, Jianjun},
   journal={Computational Materials Science},
-  url = {https://arxiv.org/abs/2307.05886},
-  year={2024}
+  volume={235},
+  pages={112802},
+  year={2024},
+  publisher={Elsevier}
 }
 ```
  
