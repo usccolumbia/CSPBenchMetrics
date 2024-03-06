@@ -5,7 +5,7 @@ Developed by Lai Wei and Dr. Jianjun Hu at <a href="http://mleg.cse.sc.edu" targ
 University of South Carolina.
 
 
-This repository contains the code and test datasets for our paper [PDF](https://arxiv.org/pdf/2307.05886):
+This repository contains the code and test datasets for our paper [Full length article](https://www.sciencedirect.com/science/article/pii/S0927025624000235):
 
 ```
 @article{wei2024towards,
