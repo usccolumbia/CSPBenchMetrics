@@ -41,7 +41,7 @@ Please install the following packages if not already installed. We show how to i
   cd graph-matching-core
   pip install -e .
 ```
-3. ****Some other packages**: Use the following commands to install some packages:
+3. **Some other packages**: Use the following commands to install some packages:
 ```
   pip install point_cloud_utils
   pip install superpose3d
