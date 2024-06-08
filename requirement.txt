@@ -1,10 +1,6 @@
-git clone https://github.com/CheshireCat12/graph-matching-core.git
-cd graph-matching-core
-pip install -e .
 pip install point_cloud_utils
 pip install superpose3d
 pip install matminer==0.9.2
-pip install pymatgen==2023.9.25
 pip install scikit-learn m3gnet
 pip install tensorflow==2.9.3
 pip install numpy==1.23
