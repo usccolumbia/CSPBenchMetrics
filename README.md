@@ -43,7 +43,15 @@ Please install the following packages if not already installed. We show how to i
 ```
 3. ****Some other packages**: Use the following commands to install some packages:
 ```
-  pip install -r requirement.txt
+  pip install point_cloud_utils
+  pip install superpose3d
+  pip install matminer==0.9.2
+  pip install scikit-learn m3gnet
+  pip install tensorflow==2.9.3
+  pip install numpy==1.23
+  pip install open3d
+  pip install --force-reinstall charset-normalizer==3.1.0
+
 ```
 4. **Pymatgen**: Tested on pymatgen 2023.9.25. Use the following command to install: 
 ```bash
