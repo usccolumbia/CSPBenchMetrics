@@ -5,7 +5,7 @@ import sys
 import argparse
 
 parser = argparse.ArgumentParser(
-        description=("groundtruth and predicted formulas name, they should be same")
+        description=("groundtruth and predicted structures should have identical formulas name")
     )
 
 parser.add_argument(
@@ -32,7 +32,7 @@ for p in files:
     print('------------------------------------------')
     print('It is computing structure: ' + p)
     print('------------------------------------------')
-    op1 = f'python3 distance_mul.py --cif {groundtruth_cif} --predicted {p} --formula {args.formula}'
+    op1 = f'python3 new_mul_distance.py --ground_truth {groundtruth_cif} --predicted {p} --formula {args.formula}'
     os.system(op1)
 
     

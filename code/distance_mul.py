@@ -1,34 +1,31 @@
-import point_cloud_utils as pcu
-import numpy as np
-from pymatgen.analysis.molecule_structure_comparator import CovalentRadius
-from pymatgen.io.cif import CifParser
-from sklearn.metrics import mean_squared_error, mean_absolute_error
+import os
+import sys
+import time
 import glob
 import random
-from scipy.stats import pearsonr 
-import scipy.stats
-import matplotlib.pyplot as plt
-import numpy as np
-from superpose3d import Superpose3D
-from math import *
-import sys
-import argparse
-import pandas as pd
 import re
-from sklearn.metrics import mean_squared_error, mean_absolute_error
-from pymatgen.analysis.structure_matcher import StructureMatcher as SM
-from cifparser import CifParserExpand
-import glob
-from m3gnet.models import M3GNet
-from pymatgen.core import Structure
-import torch
-from scipy.stats import rankdata
+import itertools
+import pickle
+from math import *
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import scipy.stats
+from scipy.stats import pearsonr, rankdata, gaussian_kde
 from scipy import interpolate
+from scipy.spatial import distance_matrix
+from sklearn.metrics import mean_squared_error, mean_absolute_error
+import torch
 from torch_geometric.utils import dense_to_sparse, degree, add_self_loops
-from pymatgen.core.periodic_table import Element
 from pymatgen.io.cif import CifParser
-from pymatgen.core.composition import Composition
-from pymatgen.core.structure import Structure
+from pymatgen.core import Structure, Composition, Element
+from pymatgen.analysis.structure_matcher import StructureMatcher as SM
+from pymatgen.analysis.molecule_structure_comparator import CovalentRadius
+import pymatgen.analysis.diffraction.xrd as xrd
+from m3gnet.models import M3GNet
+from matminer.featurizers.site import CrystalNNFingerprint
+from matminer.featurizers.structure import SiteStatsFingerprint, OrbitalFieldMatrix
+from cifparser import CifParserExpand
 from cyged.graph_pkg_core.algorithm.graph_edit_distance import GED
 from cyged.graph_pkg_core.edit_cost.edit_cost_vector import EditCostVector
 from cyged.graph_pkg_core.graph.edge import Edge
@@ -36,56 +33,10 @@ from cyged.graph_pkg_core.graph.graph import Graph
 from cyged.graph_pkg_core.graph.label.label_edge import LabelEdge
 from cyged.graph_pkg_core.graph.label.label_node_vector import LabelNodeVector
 from cyged.graph_pkg_core.graph.node import Node
-import pickle
-import time
-import os
-from matminer.featurizers.site import CrystalNNFingerprint  # matminer version = 0.6.2 (later version will give same calculation results).
-from matminer.featurizers.structure import SiteStatsFingerprint
-from scipy.spatial import distance_matrix
-from pymatgen.analysis.molecule_structure_comparator import CovalentRadius
-from cifparser import CifParserExpand
-import itertools
-from matminer.featurizers.structure.matrix import OrbitalFieldMatrix
-import pymatgen.analysis.diffraction.xrd as xrd
-from scipy.stats import gaussian_kde
+import point_cloud_utils as pcu
+from superpose3d import Superpose3D
 import open3d as o3d
-m3gnet_e_form = M3GNet.load()
-
-parser = argparse.ArgumentParser(
-        description=(
-            "rmsd,mae,rms and accuracy"
-            "calculate rmsd,mae,rms and contact map accuracy"
-        )
-    )
-
-parser.add_argument(
-    "--cif",
-    type=str,
-    default="../data/SrTiO3_gt.cif",
-    metavar="PATH",
-    help="Path to target cif file",
-)
-
-parser.add_argument(
-    "--predicted",
-    default="../data/SrTiO3_pred.cif",
-    metavar="PATH",
-    help="Path to predicted cif file",
-)
-parser.add_argument(
-    "--formula",
-    type=str,
-    default="Ca4S4",
-    help="Formula name",
-)
-
-
-args = parser.parse_args(sys.argv[1:])
-
-s1 = Structure.from_file(args.cif)
-s2 = Structure.from_file(args.predicted)
-
-ged = GED(EditCostVector(1., 1., 1., 1., 'euclidean'))
+import argparse
 
 def threshold_sort(matrix, threshold, neighbors, reverse=False, adj=False):
     mask = matrix > threshold
@@ -125,12 +76,11 @@ def threshold_sort(matrix, threshold, neighbors, reverse=False, adj=False):
         )
         return distance_matrix_trimmed, adj_list, adj_attr
 
-    ##Slightly edited version from pytorch geometric to create edge from gaussian basis
+#Slightly edited version from pytorch geometric to create edge from gaussian basis
 class GaussianSmearing(torch.nn.Module):
     def __init__(self, start=0.0, stop=5.0, resolution=50, width=0.05, **kwargs):
         super(GaussianSmearing, self).__init__()
         offset = torch.linspace(start, stop, resolution)
-        # self.coeff = -0.5 / (offset[1] - offset[0]).item() ** 2
         self.coeff = -0.5 / ((stop - start) * width) ** 2
         self.register_buffer("offset", offset)
 
@@ -149,7 +99,6 @@ def read_cif_to_graph(struct):
     n = len(struct.sites)
     graph_source = Graph('gr_source', 'gr_source.gxl', n)
     for i, s in enumerate(struct.sites):
-        #print(s.species_string)
         e=stripSymbol(s.species_string)
         E = Element(e)
         graph_source.add_node(Node(i, LabelNodeVector(np.array([float(E.Z)]))))
@@ -172,12 +121,13 @@ def read_cif_to_graph(struct):
         column=edge_index[1][i]
         dis=m[row][column]
         graph_source.add_edge(Edge(edge_index[0][i], edge_index[1][i], LabelEdge(dis)))
-        #break
     return graph_source
 
 
 #graph edit distance
 # https://github.com/CheshireCat12/graph-matching-core
+ged = GED(EditCostVector(1., 1., 1., 1., 'euclidean'))
+
 def GraphEditDistance(s1,s2):
     g1 = read_cif_to_graph(s1)
     g2 = read_cif_to_graph(s2)
@@ -188,157 +138,89 @@ def GraphEditDistance(s1,s2):
 ssf = SiteStatsFingerprint(CrystalNNFingerprint.from_preset('ops', distance_cutoffs=None, x_diff_weight=0),
                            stats=('mean', 'std_dev', 'minimum', 'maximum'))
 def CrystalFingerDistance(s1,s2):
-    f1 = np.array(ssf.featurize(s1))
-    f2 = np.array(ssf.featurize(s2))
-    dist = np.linalg.norm(f1 - f2)
-    return dist
+    try:
+        f1 = np.array(ssf.featurize(s1))
+        f2 = np.array(ssf.featurize(s2))
+        fingerPrint_dist = np.linalg.norm(f1 - f2)
+    except:
+        fingerPrint_dist = 9999
+          
+    return fingerPrint_dist
 
-try:
-    fingerPrint_dist = (CrystalFingerDistance(s1,s2))
-except:
-    fingerPrint_dist = 9999  
 
-def calculate_rmsd(source, target,matching):
+def calculate_rmsd(source, target, matching):
     """
     Calculate the Root Mean Square Distance (RMSD) between two aligned point clouds.
     Args:
         source: Source point cloud.
         target: Target point cloud.
-
+        matching: Matching points between source and target.
     Returns:
         rmsd: Root Mean Square Distance between the two point clouds.
     """
     # Ensure both point clouds have the same number of points
     assert len(source.points) == len(target.points)
     matching = np.array(matching)
-    for i in matching[:,0]:
-        points_a=[source.points[i] for i in matching[:,0]]
-        points_b=[target.points[i] for i in matching[:,1]]
+    
+    points_a = [source.points[i] for i in matching[:, 0]]
+    points_b = [target.points[i] for i in matching[:, 1]]
 
     if matching.shape[0] < len(source.points):
-        not_matched = set(range(len(source.points)))-set(matching[:,0])
+        not_matched = set(range(len(source.points))) - set(matching[:, 0])
         for i in not_matched:
             points_a.append(source.points[i])
 
-        not_matched = set(range(len(target.points)))-set(matching[:,1])
+        not_matched = set(range(len(target.points))) - set(matching[:, 1])
         for i in not_matched:
             points_b.append(target.points[i])
 
-    source.points=o3d.utility.Vector3dVector(points_a)
-    target.points=o3d.utility.Vector3dVector(points_b)
+    source.points = o3d.utility.Vector3dVector(points_a)
+    target.points = o3d.utility.Vector3dVector(points_b)
 
     # Calculate squared Euclidean distances between corresponding points
     squared_distances = np.sum(np.square(np.asarray(source.points) - np.asarray(target.points)), axis=1)
 
-    # Calculate RMSD
     rmsd = np.sqrt(np.mean(squared_distances))
     return rmsd
+    
+#Perform point cloud registration and calculate RMSD between two sets of sites.
+def point_cloud_registration_and_rmsd(s1, s2):
+    source = o3d.geometry.PointCloud()
+    target = o3d.geometry.PointCloud()
 
-# Generate source and target point clouds
-source = o3d.geometry.PointCloud()
-target = o3d.geometry.PointCloud()
+    gt = [x.coords for x in s1.sites]
+    pred = [y.coords for y in s2.sites]
+    a = np.array(gt)
+    b = np.array(pred)
 
-# s1 = getSymmetrized(s1)
-# s2 = getSymmetrized(s2)
-gt = []
-pred = []
-for x in s1.sites:
-    gt.append(x.coords)
-for y in s2.sites:
-    pred.append(y.coords)
-a = np.array(gt)
-b = np.array(pred)
+    source.points = o3d.utility.Vector3dVector(a)
+    target.points = o3d.utility.Vector3dVector(b)
 
-# Generate source point cloud
-source.points = o3d.utility.Vector3dVector(a)  
+    # Apply ICP registration
+    threshold = 5
+    trans_init = np.identity(4)  # Initial transformation matrix
+    reg_p2p = o3d.pipelines.registration.registration_icp(
+        source, target, threshold, trans_init,
+        o3d.pipelines.registration.TransformationEstimationPointToPoint(),
+        o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=1000))
 
-# Generate target point cloud
-target.points = o3d.utility.Vector3dVector(b)  
+    # Transform source to target
+    source.transform(reg_p2p.transformation)
 
-# Apply ICP registration
-threshold = 5
-trans_init = np.identity(4)  # Initial transformation matrix
-reg_p2p = o3d.pipelines.registration.registration_icp(
-    source, target, threshold, trans_init,
-    o3d.pipelines.registration.TransformationEstimationPointToPoint(),
-    o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=1000))
+    # Calculate RMSD
+    rmsd = reg_p2p.inlier_rmse
+    matching = np.asarray(reg_p2p.correspondence_set)
+    if reg_p2p.fitness < 1:
+        try:
+            rmsd = calculate_rmsd(source, target, matching)
+        except:
+            rmsd = 9999
 
-# Transform source to target
-source.transform(reg_p2p.transformation)
-
-# Calculate RMSD
-rmsd=reg_p2p.inlier_rmse
-matching = np.asarray(reg_p2p.correspondence_set)
-if reg_p2p.fitness < 1:
-    try:
-            rmsd = calculate_rmsd(source, target,matching)
-    except:
-            rmsd = 9999    
-
-
-#superpose point cloud distances with alignment by rotation and translation.
-# https://github.com/jewettaij/superpose3d_cpp
-# def superpose3d_rmsd(s1, s2): # s1, and s2 are to pymatgen structures.
-
-'''
-We dont't use this metrics now. This function does not attempt to determine 
-which pairs of points from either cloud correspond. Instead, it infers them from 
-the order of the arrays. 
-(It assumes that the i'th point from X corresponds to the i'th point from x.)
-'''
-
-#     gt = []
-#     pred = []
-#     for x in s1.sites:
-#         gt.append(x.coords)
-#     for y in s2.sites:
-#         pred.append(y.coords)
-
-#     a = np.array(gt)
-#     b = np.array(pred)
-#     X = a
-#     x = b
-
-#     result = Superpose3D(X,x, None, False, True)
-
-#     Xshifted = [ [X[i][0],X[i][1]+100, X[i][2]] for i in range(0,len(X))]
-#     xscaled  = [ [2*x[i][0],2*x[i][1],    2*x[i][2]] for i in range(0,len(x))]
-#     xscshift = [ [2*x[i][0],2*x[i][1]+200,2*x[i][2]] for i in range(0,len(x))]
-
-#     # Now try again using the translated, rescaled coordinates:
-#     # now test weights, rescale, and quaternions
-#     w = []
-#     w_rand = random.randint(1,3)
-#     for i in range(0, len(x)):
-#         w.append(w_rand)
-#     result = Superpose3D(X, xscshift, w, True)
-#     # Does the RMSD returned in result[0] match the RMSD calculated manually?
-#     R = np.array(result[1])              # rotation matrix
-#     T = np.array(result[2]).transpose()  # translation vector (3x1 matrix)
-#     c = result[3]                        # scalar
-#     if len(X) > 0:
-#         _x = np.array(xscshift).transpose()
-#         # _xprime = c*R*_x + T   <-- syntax is depreciated
-#         _xprime = c*np.matmul(R,_x) + np.outer(T, np.array([1]*len(X)))
-#         xprime = np.array(_xprime.transpose()) # convert to length 3 numpy array
-#     else:
-#         xprime = np.array([])
-#     RMSD = 0.0
-#     sum_w = 0.0
-#     for i in range(0, len(X)):
-#         RMSD += w[i]*((X[i][0] - xprime[i][0])**2 +
-#                       (X[i][1] - xprime[i][1])**2 +
-#                       (X[i][2] - xprime[i][2])**2)
-#         sum_w += w[i]
-
-#     if len(X) > 0:
-#         RMSD = sqrt(RMSD / sum_w)
-
-#     # assert(abs(RMSD - result[0]) < 1.0e-6)
-#     return RMSD
-
+    return rmsd
 
 #energy distance
+m3gnet_e_form = M3GNet.load()
+
 def en_dist(s1, s2):
     s_gt=s1
     s_pred=s2
@@ -347,7 +229,7 @@ def en_dist(s1, s2):
     energy_distance = float(abs(e_form_gt - e_form_predict).numpy())
     return energy_distance
 
-#calculate geometric distances..from point_cloud_3d package.
+#calculate geometric distances from point_cloud_3d package.
 def point_cloud_distance(s1, s2):
     s_gt=s1
     s_pred=s2
@@ -361,8 +243,7 @@ def point_cloud_distance(s1, s2):
 
     a = np.array(gt)
     b = np.array(pred)
-    
-    ##proximate Wasserstein (Sinkhorn) distance between two point clouds
+    #proximate Wasserstein (Sinkhorn) distance between two point clouds
 
     # M is a 100x100 array where each entry  (i, j) is the squared distance between point a[i, :] and b[j, :]
     M = pcu.pairwise_distances(a, b)
@@ -377,7 +258,6 @@ def point_cloud_distance(s1, s2):
 
     # To get the distance as a number just compute the frobenius inner product <M, P>
     sinkhorn_dist = (M*P).sum()
-
     chamfer_dist = pcu.chamfer_distance(a, b)
 
     # Compute one-sided squared Hausdorff distances
@@ -393,11 +273,8 @@ def point_cloud_distance(s1, s2):
 
     # Find the index pairs of the two points with maximum shortest distancce
     hausdorff_dist, idx_b, idx_a = pcu.hausdorff_distance(b, a, return_index=True)
-    assert np.abs(np.sum((a[idx_a] - b[idx_b])**2) - hausdorff_dist**2) < 1e-5, "These values should be almost equal"  
+    assert np.abs(np.sum((a[idx_a] - b[idx_b])**2) - hausdorff_dist**2) < 1e-5, "These values should be almost equal"
     return sinkhorn_dist, chamfer_dist, hausdorff_dist
-
-
-
 
 def adj(structure):
     d2 = structure.distance_matrix
@@ -433,10 +310,8 @@ def adj(structure):
     d2 = d2.astype(int)
     return d2
 
-
 with open('style.ini', "r") as fileobj:
     thresholds = fileobj.read()
-
 
 #distance matrix similarity score
 def distance_matrix_score(gt_cif,predicted_cif):
@@ -489,7 +364,6 @@ def wyckoff_distance(targetcif,predictedcif):
         for i in copr:
             coprf1.append(float(i))
         coprf1 = np.array(coprf1).reshape(int(len(coprf1) / 3), 3)
-
 
     parser1 = CifParserExpand(targetcif)
     structure1 = parser1.get_structures()[0]
@@ -557,9 +431,6 @@ def wyckoff_distance(targetcif,predictedcif):
 
     matrix_similarity = fitness
     return wyckoff_rmse,wyckoff_mae
-    
-
-wyckoff_rmse,wyckoff_mae = wyckoff_distance(args.cif,args.predicted)
 
 #pymatgen RMS distances
 def PMD(structure1, structure2):
@@ -572,9 +443,7 @@ def PMD(structure1, structure2):
         rms_anonymous = sm.get_rms_anonymous(structure1, structure2)[0]
     except TypeError:
         rms_anonymous='None'
-    return rms,rms_anonymous
-
-rms,rms_anonymous = PMD(s1,s2)
+    return rms, rms_anonymous
 
 #XRD and OFM features
 ofm= OrbitalFieldMatrix()
@@ -592,7 +461,7 @@ def convert_to_powder(cif_str, file):
     powd_patt = powd.get_pattern(crystal_struct)
     return [[x, y] for x, y in zip(powd_patt.x, powd_patt.intensity)]
 
-def calc(gt_file, pred_file):
+def ord_ofm_dist(gt_file, pred_file):
     s_gt = Structure.from_file(gt_file)
     s_pred = Structure.from_file(pred_file)
     gt_XRD_feature = smooth(convert_to_powder(open(gt_file, 'rb').read(), gt_file))
@@ -602,32 +471,92 @@ def calc(gt_file, pred_file):
     # Compute Euclidean distance
     XRD_euclidean_distance = np.linalg.norm(gt_XRD_feature - pred_XRD_feature)
     OFM_euclidean_distance = np.linalg.norm(gt_OFM_feature - pred_OFM_feature)
-    print("XRD Euclidean Distance:", XRD_euclidean_distance)
-    print("OFM Euclidean Distance:", OFM_euclidean_distance)
+
     return XRD_euclidean_distance, OFM_euclidean_distance
 
-XRD_dist, OFM_dist = calc(args.cif, args.predicted)
-energy_dis = en_dist(s1, s2)
 
-#superpose_rmsd = superpose3d_rmsd(s1, s2)
-superpose_rmsd = rmsd #replace superpose3d_rmsd here
+def main():
+    parser = argparse.ArgumentParser(description="Calculate various structural distances")
 
-a, b=  rms,rms_anonymous
-x, y, z= point_cloud_distance(s1, s2)
+    parser.add_argument(
+		"--ground_truth", 
+		type=str, 
+		default="../data/SrTiO3_gt.cif", 
+		metavar="PATH", 
+		help="Path to the ground truth CIF file"
+		)
+	 
+    parser.add_argument(
+		"--predicted", 
+		type=str, 
+		default="../data/Sr1Ti1O3_pred.cif", 
+		metavar="PATH", 
+		help="Path to the predicted CIF file"
+		)
+							 
+    parser.add_argument(
+    "--formula",
+    type=str,
+    default="Ca4S4",
+    help="Formula name"
+    )
+    args = parser.parse_args()
 
-edit_cost = GraphEditDistance(s1,s2)
-result_dict = {'structure': args.predicted.split('/')[-1] , 'energy_distance':energy_dis, 
-'wyckoff_rmse':wyckoff_rmse, 'wyckoff_mae':wyckoff_mae, 'rms_anonymous':rms_anonymous, 
-'rms_dist': rms, 'sinkhorn_dist': x, 'chamfer_dist': y, 'hausdorff_dist': z, 
-'superpose_rmsd': superpose_rmsd, 'edit_graph_distance':edit_cost, 'fingerPrint':fingerPrint_dist, 'XRD_dist': XRD_dist, 'OFM_dist': OFM_dist}
-print(result_dict)
-dct = {k:[v] for k,v in result_dict.items()}  # WORKAROUND
-df = pd.DataFrame(dct)
-df.drop_duplicates(inplace=True)
+    # Load structures
+    s1 = Structure.from_file(args.ground_truth)
+    s2 = Structure.from_file(args.predicted)
 
-if not os.path.exists("../results"):
-    os.mkdir("../results")
-if not os.path.exists(f"../results/distance_table_{args.formula}.csv"):
-    df.to_csv (f"../results/distance_table_{args.formula}.csv", index = False, header=True, float_format='%.4f')
-else:
-    df.to_csv (f"../results/distance_table_{args.formula}.csv", mode='a', index = False, header=False,float_format='%.4f')
+    # Calculate distances
+    energy_dist = en_dist(s1, s2)
+    rms, rms_anonymous = PMD(s1, s2)
+    wyckoff_rmse, wyckoff_mae = wyckoff_distance(args.ground_truth, args.predicted)
+    sinkhorn_dist, chamfer_dist, hausdorff_dist = point_cloud_distance(s1, s2)
+    superpose_rmsd = point_cloud_registration_and_rmsd(s1, s2)
+    edit_cost = GraphEditDistance(s1, s2)
+    fingerPrint_dist = CrystalFingerDistance(s1,s2)
+    XRD_dist, OFM_dist = ord_ofm_dist(args.ground_truth, args.predicted)
+
+    # Print results
+    print("=========================================================")
+    print("Energy distance:", energy_dist)
+    print("Wyckoff RMSE:", wyckoff_rmse)
+    print("Wyckoff MAE:", wyckoff_mae)
+    print("RMS Distance:", rms)
+    print("Anonymous RMS Distance:", rms_anonymous)
+    print("Sinkhorn distance:", sinkhorn_dist)
+    print("Chamfer distance:", chamfer_dist)
+    print("Hausdorff distance:", hausdorff_dist)
+    print("Superpose RMSD:", superpose_rmsd)
+    print("Graph Edit Distance:", edit_cost)
+    print("Fingerprint Distance:", fingerPrint_dist)
+    print("XRD Euclidean Distance:", XRD_dist)
+    print("OFM Euclidean Distance:", OFM_dist)
+    print("See results/distance_table.csv")
+    print("=========================================================")
+
+    # Save results to a CSV
+    result_dict = {
+        'structure': args.predicted.split('/')[-1],
+        'energy_distance': energy_dist,
+        'wyckoff_rmse': wyckoff_rmse, 'wyckoff_mae': wyckoff_mae,
+        'rms_anonymous': rms_anonymous, 'rms_dist': rms, 
+        'sinkhorn_dist': sinkhorn_dist, 'chamfer_dist': chamfer_dist,
+        'hausdorff_dist': hausdorff_dist, 'superpose_rmsd': superpose_rmsd,
+        'edit_graph_distance': edit_cost, 'fingerPrint': fingerPrint_dist,
+        'XRD_dist': XRD_dist, 'OFM_dist': OFM_dist
+    }
+    dct = {k: [v] for k, v in result_dict.items()}
+    df = pd.DataFrame(dct)
+    df.drop_duplicates(inplace=True)
+
+    # Create directory and file if they don't exist
+    results_path = "../results"
+    if not os.path.exists(results_path):
+        os.makedirs(results_path)
+    if not os.path.exists(f"../results/distance_table_{args.formula}.csv"):
+        df.to_csv (f"../results/distance_table_{args.formula}.csv", index = False, header=True, float_format='%.4f')
+    else:
+        df.to_csv (f"../results/distance_table_{args.formula}.csv", mode='a', index = False, header=False,float_format='%.4f')
+
+if __name__ == "__main__":
+    main()
