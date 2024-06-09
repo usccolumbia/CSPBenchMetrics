@@ -23,19 +23,19 @@ This is a package for benchmarking the performance of crystal structure predicti
  
 ## How to install the CSPMetrics package
 Please install the following packages if not already installed. 
-1. **Create environment**: Use the following command to install:
+1. **Create environment**: Use the following commands to install:
 ```
 conda create -n metrics python=3.9 pip
 conda activate metrics
 ```
-2. **Pytorch Geometric (PyG)**: Please notice that you need to **install a version of pytorch that corresponds to cuda**. Use the following command to install: 
+2. **Pytorch Geometric (PyG)**: Please notice that you need to **install a version of pytorch that corresponds to cuda**. Use the following commands to install: 
 ```
 conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=11.3 -c pytorch
 conda install pytorch-scatter -c pyg
 conda install pytorch-sparse -c pyg
 conda install pyg -c pyg
 ```
-3. **Graph-matching-core**: Use the following command to install: 
+3. **Graph-matching-core**: Use the following commands to install: 
 ```
 git clone https://github.com/CheshireCat12/graph-matching-core.git
 cd graph-matching-core
