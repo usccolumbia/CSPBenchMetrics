@@ -28,7 +28,7 @@ Please install the following packages if not already installed.
 conda create -n metrics python=3.9 pip
 conda activate metrics
 ```
-2. **Pytorch Geometric (PyG)**: Please notice that you need to install a version of pytorch that corresponds to cuda. Use the following command to install: 
+2. **Pytorch Geometric (PyG)**: Please notice that you need to **install a version of pytorch that corresponds to cuda**. Use the following command to install: 
 ```
 conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=11.3 -c pytorch
 conda install pytorch-scatter -c pyg
@@ -51,7 +51,6 @@ pip install tensorflow==2.9.3
 pip install numpy==1.23
 pip install open3d
 pip install --force-reinstall charset-normalizer==3.1.0
-
 ```
 4. **Pymatgen**: Tested on pymatgen 2023.9.25. Use the following command to install: 
 ```
