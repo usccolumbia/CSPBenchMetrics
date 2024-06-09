@@ -5,8 +5,13 @@ import sys
 import argparse
 
 parser = argparse.ArgumentParser(
-        description=("groundtruth and predicted structures should have identical formulas name")
+    description=(
+        "This script compares ground truth and predicted structure files. The files should "
+        "have identical formulas in their names. For example, for a ground truth file named "
+        "'SrTiO3.cif', the corresponding predicted file could be named 'TCSP_SrTiO3.cif'."
     )
+)
+
 
 parser.add_argument(
     "--formula",
@@ -30,9 +35,9 @@ files = glob.glob(predicted_cif)
 
 for p in files:
     print('------------------------------------------')
-    print('It is computing structure: ' + p)
+    print('For structure: ' + p)
     print('------------------------------------------')
-    op1 = f'python3 new_mul_distance.py --ground_truth {groundtruth_cif} --predicted {p} --formula {args.formula}'
+    op1 = f'python3 distance_mul.py --ground_truth {groundtruth_cif} --predicted {p} --formula {args.formula}'
     os.system(op1)
 
     
