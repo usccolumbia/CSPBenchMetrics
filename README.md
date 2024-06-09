@@ -22,7 +22,7 @@ This repository contains the code and test datasets for our paper [Towards quant
 This is a package for benchmarking the performance of crystal structure prediction algorithms by calculating the quality of predicted structures compared to the ground truth structures using several common distance metrics, including m3gnet energy distance, minimal Wyckoff RMSE distance, minimal Wyckoff MAE distance, RMS distance, RMS anonymous distance, the Sinkhorn distance, the Chamfer distance, the Hausdorff distance, superpose RMSD distance, edit graph distance, XRD spectrum distance and fingerprint distance to standardize the comparison of material structure prediction models.  
  
 ## How to install the CSPMetrics package
-Please install the following packages if not already installed. We show how to install them using **pip** only, but you can also use **conda** for the installation purpose. Also you can a virtual environment using conda or pip for this purpose (recommended).
+Please install the following packages if not already installed. 
 1. **Create environment**: Tested on Pytorch 1.9.0. Use the following command to install:
 ```
 conda create -n metrics python=3.9 pip
