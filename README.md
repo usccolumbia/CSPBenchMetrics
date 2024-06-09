@@ -23,7 +23,7 @@ This is a package for benchmarking the performance of crystal structure predicti
  
 ## How to install the CSPMetrics package
 Please install the following packages if not already installed. 
-1. **Create environment**: Tested on Pytorch 1.9.0. Use the following command to install:
+1. **Create environment**: Use the following command to install:
 ```
 conda create -n metrics python=3.9 pip
 conda activate metrics
