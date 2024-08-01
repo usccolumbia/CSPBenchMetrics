@@ -31,8 +31,17 @@ conda activate metrics
 2. **Pytorch Geometric (PyG)**: Please notice that you need to **install a version of pytorch that corresponds to cuda**. Use the following commands to install: 
 ```
 conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=11.3 -c pytorch
+```
+
+```
 conda install pytorch-scatter -c pyg
+```
+
+```
 conda install pytorch-sparse -c pyg
+```
+
+```
 conda install pyg -c pyg
 ```
 3. **Graph-matching-core**: Use the following commands to install: 
